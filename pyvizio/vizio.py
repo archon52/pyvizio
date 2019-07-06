@@ -8,9 +8,9 @@ from .cmd_input import GetInputsListCommand, GetCurrentInputCommand, ChangeInput
 from .cmd_pair import BeginPairCommand, CancelPairCommand, PairChallengeCommand
 from .cmd_power import GetPowerStateCommand
 from .cmd_remote import EmulateRemoteCommand
-from .cmd_settings import GetCurrentAudioCommand
+from .cmd_settings import GetCurrentAudioCommand, GetPictureSettingCommand, ChangePictureSettingCommand
 from .discovery import discover
-from .protocol import invoke_api, invoke_api_auth, KeyCodes
+from .protocol import invoke_api, invoke_api_auth, KeyCodes, CNames
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -110,6 +110,17 @@ class Vizio(object):
     def get_power_state(self):
         return self.__invoke_api_may_need_auth(GetPowerStateCommand(self._device_type))
 
+    def get_picture_setting(self, cname):
+        return self.__invoke_api_may_need_auth(GetPictureSettingCommand(cname, self._device_type))
+
+    def set_picture_setting(self, cname, value):
+        current = self.get_picture_setting(cname)
+        if current is None:
+            _LOGGER.error("couldn't get current value for " + cname)
+            return False
+        return self.__invoke_api_may_need_auth(
+            ChangePictureSettingCommand(current.id, cname, value, self._device_type))
+
     def pow_on(self):
         return self.__remote("POW_ON")
 
@@ -171,3 +182,10 @@ class Vizio(object):
 
     def get_device_keys(self):
         return KeyCodes.CODES[self._device_type].keys()
+
+    def get_current_backlight(self):
+        return self.get_picture_setting(CNames.Picture.BACKLIGHT).value
+
+    def set_backlight(self, value):
+        return self.set_picture_setting(CNames.Picture.BACKLIGHT, value)
+

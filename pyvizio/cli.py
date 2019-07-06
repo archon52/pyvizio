@@ -218,5 +218,21 @@ def key_press(vizio, key):
     _LOGGER.info("OK" if result else "ERROR")
 
 
+@cli.command()
+@pass_vizio
+def backlight_current(vizio):
+    _LOGGER.info("Current backlight: %s", vizio.get_current_backlight())
+
+
+@cli.command()
+@click.argument("amount", required=True, type=click.IntRange(0, 100, clamp=True))
+@pass_vizio
+def backlight(vizio, amount):
+    amount = int(amount)
+    result = vizio.set_backlight(amount)
+    _LOGGER.info("setting backlight to " + str(amount))
+    _LOGGER.info("OK" if result else "ERROR")
+
+
 if __name__ == "__main__":
     cli()
